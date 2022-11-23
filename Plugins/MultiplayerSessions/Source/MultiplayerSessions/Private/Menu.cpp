@@ -8,8 +8,9 @@
 #include "OnlineSubsystem.h"
 
 
-void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch)
+void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FString LobbyPath)
 {
+	PathToLobby = FString::Printf(TEXT("%s?listen"), *LobbyPath);
 	NumPublicConnections = NumberOfPublicConnections;
 	MatchType = TypeOfMatch;
 		
@@ -85,7 +86,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 		UWorld* World = GetWorld();
 		if (World)
 		{
-			World->ServerTravel(FString("/Game/ThirdPerson/Maps/Lobby?listen"));
+			World->ServerTravel(PathToLobby);
 		}
 	}
 	else
@@ -99,15 +100,17 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 				FString(TEXT("Session NOT Created!"))
 				);
 		}
+
+		HostButton->SetIsEnabled(true);
 	}
 }
 
-void UMenu::OnFindSession(const TArray<FOnlineSessionSearchResult>& SessionResult, bool bWasSuccessful)
+void UMenu::OnFindSession(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
 {
 	if (MultiplayerSessionsSubsystem == nullptr)
 		return;
 	
-	for (auto Result : SessionResult)
+	for (auto Result : SessionResults)
 	{
 		FString SettingsValue;
 		Result.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);
@@ -117,7 +120,11 @@ void UMenu::OnFindSession(const TArray<FOnlineSessionSearchResult>& SessionResul
 			return;
 		}
 	}
-	
+
+	if (!bWasSuccessful || SessionResults.Num() == 0)
+	{
+		JoinButton->SetIsEnabled(true);
+	}
 }
 
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
@@ -139,6 +146,9 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 		}
 		
 	}
+
+	if (Result != EOnJoinSessionCompleteResult::Success)
+		JoinButton->SetIsEnabled(true);
 }
 
 void UMenu::OnDestroySession(bool bWasSuccessful)
@@ -147,11 +157,21 @@ void UMenu::OnDestroySession(bool bWasSuccessful)
 
 void UMenu::OnStartSession(bool bWasSuccessful)
 {
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			15.f,
+			FColor::Yellow,
+			FString(TEXT("Session STARTED!"))
+			);
+	}
 }
 
 
 void UMenu::HostButtonClicked()
 {
+	HostButton->SetIsEnabled(false);
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(
@@ -171,6 +191,7 @@ void UMenu::HostButtonClicked()
 
 void UMenu::JoinButtonClicked()
 {
+	JoinButton->SetIsEnabled(false);
 	if (MultiplayerSessionsSubsystem)
 	{
 		MultiplayerSessionsSubsystem->FindSession(10000);	

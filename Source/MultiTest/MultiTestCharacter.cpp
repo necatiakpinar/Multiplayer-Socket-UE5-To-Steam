@@ -62,12 +62,12 @@ AMultiTestCharacter::AMultiTestCharacter() :
 	{
 		OnlineSessionInterface = OnlineSubsystem->GetSessionInterface();
 		
-		if(GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1,3.0f,
-				FColor::Blue,
-				FString::Printf(TEXT("Found subsystem %s"), *OnlineSubsystem->GetSubsystemName().ToString()));
-		}
+		// if(GEngine)
+		// {
+		// 	GEngine->AddOnScreenDebugMessage(-1,3.0f,
+		// 		FColor::Blue,
+		// 		FString::Printf(TEXT("Found subsystem %s"), *OnlineSubsystem->GetSubsystemName().ToString()));
+		// }
 	}
 }
 
